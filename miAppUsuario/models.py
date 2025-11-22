@@ -3,34 +3,19 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-# Create your models here.
-# 🔑 1. DEFINIR EL CUSTOM MANAGER (SOLUCIÓN AL ERROR)
 class UsuarioManager(BaseUserManager):
-    # Método requerido para crear usuarios normales
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('El email debe ser establecido.')
         
         email = self.normalize_email(email)
-        
-        # ⚠️ Nota: AbstractBaseUser tiene un campo 'password' implícito, 
-        # así que creamos el objeto sin hashear y luego usamos set_password.
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    # Método requerido para crear superusuarios (administradores)
     def create_superuser(self, email, password=None, **extra_fields):
-        # Asume que tu modelo tiene is_staff y is_superuser
         extra_fields.setdefault('is_active', True)
-        # ⚠️ Es posible que necesites añadir is_staff y is_superuser a tu modelo 
-        # Usuario si quieres usar esta funcionalidad, o a los extra_fields.
-        
-        # Necesitas definir cómo se manejan los roles aquí si son requeridos
-        # (Si Rol y País son obligatorios, debes asegurarte de que se pasen aquí o tengan un valor por defecto para el superusuario)
-        
-        # Asignar valores obligatorios para el superusuario
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         
@@ -48,20 +33,16 @@ class Usuario(AbstractUser):
     telefono = models.CharField(max_length=30,blank=True, null=True , unique=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True, null=True)
 
-    # 🔑 CRUCIAL: Define el campo que se usa para iniciar sesión
     USERNAME_FIELD = 'email' 
     def has_perm(self, perm, obj=None):
         "Does the user have a specific permission?"
-        # Implementación simple: solo los superusuarios tienen todos los permisos
         return self.is_superuser
 
     def has_module_perms(self, app_label):
         "Does the user have permissions to view the app 'app_label'?"
-        # Implementación simple: solo los superusuarios tienen acceso a módulos
         return self.is_superuser
     
     objects = UsuarioManager()
-    # Debes incluir 'nombre' y 'apellido' si quieres que sean obligatorios al crear el superusuario.
     REQUIRED_FIELDS = ['first_name', 'last_name', 'rol_usuario_id', 'pais_usuario_id']
     rol_usuario = models.ForeignKey(
         'Rol',
@@ -76,21 +57,15 @@ class Usuario(AbstractUser):
         verbose_name="País de Usuario"
     )
     
-# miAppUsuario/models.py (Solo los métodos corregidos)
-
-# ...
     
     def set_clave_secreta(self, clave_raw):
-        # 🟢 CORRECCIÓN
         self.set_password(clave_raw)
         
     def check_clave_secreta(self, clave_raw):
-        # 🟢 CORRECCIÓN
         return self.check_password(clave_raw)	
 
     class Meta:
         ordering = ['first_name'] 
-        # ordering hara que se ordene del nombre mas reciente al mas antiguo 
     def __str__(self):
         return f"{self.nombre} {self.apellido} <{self.email}>"
     

@@ -2,18 +2,10 @@
 
 {% block content %}
 <style>
-    /* ======================================
-    Estilos Específicos para Confirmación de Eliminación
-    (Basado en edit.html)
-    ======================================
-    */
-
-    /* Reducción del ancho para la vista de confirmación */
     .container {
         max-width: 800px;
     }
 
-    /* --- Estilos de cabecera y estructura (Copia de edit.html) --- */
     .header {
         color: white;
         margin-bottom: 30px;
@@ -61,7 +53,6 @@
         box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
 
-    /* Mensajes y Alertas */
     .messages {
         margin-bottom: 20px;
     }
@@ -72,18 +63,17 @@
         margin-bottom: 10px;
     }
 
-    /* --- Estilo de la zona de Confirmación (Específico para delete) --- */
     .delete-confirmation {
         text-align: center;
         margin-bottom: 30px;
         padding: 30px;
-        border: 2px dashed #f8d7da; /* Borde de advertencia */
+        border: 2px dashed #f8d7da;
         border-radius: 15px;
-        background: #fff3f4; /* Fondo suave de peligro */
+        background: #fff3f4;
     }
 
     .delete-confirmation h2 {
-        color: #dc3545; /* Rojo peligro */
+        color: #dc3545;
         font-size: 1.8rem;
         margin-bottom: 15px;
     }
@@ -94,7 +84,6 @@
         line-height: 1.6;
     }
 
-    /* --- Estilos de Botones --- */
     .btn {
         display: inline-flex;
         align-items: center;
@@ -113,7 +102,6 @@
         height: 18px;
     }
 
-    /* Botón de Cancelar (Secundario, de edit.html) */
     .btn-secondary {
         background: #f0f0f0;
         color: #666;
@@ -123,9 +111,7 @@
         background: #e0e0e0;
     }
     
-    /* Botón de Eliminación (Danger/Primary para esta vista) */
     .btn-danger {
-        /* Gradiente de peligro, similar al de home.html pero más intenso */
         background: linear-gradient(135deg, #fa709a 0%, #f5576c 100%); 
         color: white;
     }
@@ -142,7 +128,6 @@
     }
 
 
-    /* Responsive */
     @media (max-width: 768px) {
         .main-content {
             padding: 20px;
@@ -163,7 +148,7 @@
                 Volver al Listado
             </a>
             <h1>Eliminar Usuario: {{ usuario.first_name }} {{ usuario.last_name }}</h1>
-            <p class="subtitle">⚠️ ¡Advertencia! Esta acción es irreversible. Confirma para eliminar el registro permanentemente.</p>
+            <p class="subtitle"> ¡Advertencia! Esta acción es irreversible. Confirma para eliminar el registro permanentemente.</p>
         </header>
 
         <main class="main-content">

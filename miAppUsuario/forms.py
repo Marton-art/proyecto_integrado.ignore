@@ -3,7 +3,6 @@ from django import forms
 from .models import Usuario 
 
 class UsuarioForm(forms.ModelForm):
-    # Campos extra para la contraseña que NO están en el modelo
     contraseña = forms.CharField(
         widget=forms.PasswordInput(attrs={'placeholder': 'Mínimo 8 caracteres'}), 
         label='Contraseña',
@@ -16,7 +15,6 @@ class UsuarioForm(forms.ModelForm):
 
     class Meta:
         model = Usuario
-        # 🟢 AÑADIMOS los campos: 'telefono', 'edad', 'rol_usuario', 'pais_usuario'
         fields = ['first_name', 'last_name', 'email', 'telefono', 'edad', 'rol_usuario', 'pais_usuario', 'is_active'] 
         
         # Opcional: Mejora la experiencia de usuario con placeholders

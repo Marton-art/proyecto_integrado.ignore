@@ -452,7 +452,6 @@ body {
         </header>
 
         <main class="main-content">
-            <!-- Tabs -->
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('individual')">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -470,7 +469,6 @@ body {
                 </button>
             </div>
 
-            <!-- Tab Content: Individual -->
             <div id="individual" class="tab-content active">
                 <form method="POST" class="user-form">
                     {% csrf_token %}
@@ -542,7 +540,6 @@ body {
                         document.addEventListener('DOMContentLoaded', function() {
                             const form = document.querySelector('.user-form');
                             if (form) {
-                                // Aplica la clase a inputs y selects
                                 form.querySelectorAll('input:not([type="submit"]):not([type="reset"]):not([type="hidden"]), select').forEach(element => {
                                     element.classList.add('form-control');
                                 });
@@ -631,7 +628,6 @@ body {
     </div>
 
     <script>
-        // Tab switching
         function switchTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -640,7 +636,6 @@ body {
             document.getElementById(tabName).classList.add('active');
         }
 
-        // File upload handling
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('excelFile');
         const fileInfo = document.getElementById('fileInfo');
@@ -688,7 +683,6 @@ body {
             uploadBtn.disabled = true;
         }
 
-        // Form submission with progress
         document.getElementById('uploadForm').addEventListener('submit', (e) => {
             document.getElementById('uploadProgress').style.display = 'block';
             document.getElementById('progressFill').style.width = '50%';

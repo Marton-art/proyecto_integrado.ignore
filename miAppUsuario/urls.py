@@ -4,7 +4,7 @@ from django.urls import path
 app_name = 'usuarios'
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    path('home/', views.home, name='home'),
     path('crear/', views.create, name='create'),
     path('ver/', views.read, name='read'),
     path('editar/<int:pk>/', views.edit, name='edit'), 
