@@ -248,7 +248,7 @@ def admin_dashboard(request):
             'nombre_usuario': request.user.first_name, 
             'rol': rol_actual,
         }
-        return render(request, 'home.html', context) 
+        return render(request, 'admin-dashboard.html', context) 
         
     else:
         messages.warning(request, f'Acceso denegado. Su rol ({rol_actual if rol_actual else "No definido"}) no está autorizado para esta área.')

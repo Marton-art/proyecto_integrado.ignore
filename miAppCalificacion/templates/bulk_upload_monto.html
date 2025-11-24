@@ -1,0 +1,43 @@
+{% extends 'menu.html' %}
+
+{% block title %}Carga Masiva de Montos{% endblock %}
+
+{% block content %}
+    
+    <h2 style="color: #333; font-size: 2rem; margin-bottom: 25px; padding-top: 10px;">
+        Carga Masiva de Calificaciones (Montos)
+    </h2>
+    
+    {% include 'components/messages.html' %} 
+
+    <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+        <p style="color: #666; margin-bottom: 20px;">Utilice esta función para ingresar o actualizar registros de Montos Tributarios mediante un archivo CSV o Excel.</p>
+        
+        <a href="#" class="btn btn-read" style="padding: 8px 15px; font-size: 0.9rem; margin-bottom: 25px; border-radius: 5px;" target="_blank">
+            Descargar Plantilla de Formato
+        </a>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 25px;">
+                <label for="excel_file" style="display: block; font-weight: 600; color: #555; margin-bottom: 5px;">
+                    Seleccionar Archivo (.csv, .xlsx)
+                </label>
+                <input type="file" style="display: block; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;" 
+                    name="file" id="excel_file" 
+                    accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" required>
+            </div>
+            
+            <p style="color: #c0392b; font-size: 0.9em; margin-top: 15px;">
+                ⚠️ **Importante:** La carga masiva actualizará los registros existentes si coinciden la Empresa Subsidiaria y la Fecha de Inicio de Periodo.
+            </p>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 30px;">
+                <a href="{% url 'calificaciones:calificacion_list' %}" class="btn btn-read" style="margin-right: 15px;">Cancelar</a>
+                
+                <button type="submit" class="btn btn-create">Subir y Procesar</button>
+            </div>
+        </form>
+    </div>
+{% endblock content %}

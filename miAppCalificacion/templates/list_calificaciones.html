@@ -1,0 +1,69 @@
+{% extends 'menu.html' %} 
+
+{% block title %}Mantenedor de Calificaciones{% endblock %}
+
+{% block content %}
+    <h2 style="color: #333; font-size: 2rem; margin-bottom: 25px; padding-top: 10px;">
+        Gestión de Calificaciones Tributarias
+    </h2>
+    
+    {% include 'components/messages.html' %}
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 25px;">
+        <div>
+            <a href="{% url 'calificaciones:create_calificacion' %}" class="btn btn-create" style="margin-right: 15px; border-radius: 5px;">
+                Ingreso Manual
+            </a>
+            <a href="{% url 'calificaciones:bulk_upload_monto' %}" class="btn btn-update" style="border-radius: 5px;">
+                Carga Masiva (Montos)
+            </a>
+        </div>
+        {# Aquí irían los filtros por Subsidiaria/Periodo #}
+    </div>
+    
+    <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow-x: auto;">
+        
+        <h6 style="font-weight: 600; color: #333; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            Calificaciones Registradas
+        </h6>
+        
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 2px solid #667eea; background-color: #f5f7fa;">
+                    <th style="padding: 12px 15px; color: #555;">Subsidiaria</th>
+                    <th style="padding: 12px 15px; color: #555;">Inicio Periodo</th>
+                    <th style="padding: 12px 15px; color: #555;">Monto Impuesto</th>
+                    <th style="padding: 12px 15px; color: #555;">Estado</th>
+                    <th style="padding: 12px 15px; color: #555;">Creador</th>
+                    <th style="padding: 12px 15px; color: #555;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for calificacion in calificaciones %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px 15px;">{{ calificacion.empresa_subsidiaria.nombre_legal }}</td>
+                    <td style="padding: 10px 15px;">{{ calificacion.fecha_inicio_periodo|date:"d-m-Y" }}</td>
+                    <td style="padding: 10px 15px;">${{ calificacion.monto_impuesto|floatformat:2 }}</td>
+                    <td style="padding: 10px 15px;">
+                        <span style="background-color: #4facfe; color: white; padding: 4px 8px; border-radius: 5px; font-size: 0.85em; font-weight: 600;">
+                            {{ calificacion.estado }}
+                        </span>
+                    </td>
+                    <td style="padding: 10px 15px;">{{ calificacion.usuario_creador.first_name }}</td>
+                    <td style="padding: 10px 15px; white-space: nowrap;">
+                        <a href="{% url 'calificaciones:edit_calificacion' calificacion.pk %}" class="btn" style="padding: 6px 10px; font-size: 0.8em; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); margin-right: 5px;">Editar</a>
+                        <a href="{% url 'calificaciones:delete_calificacion' calificacion.pk %}" class="btn" style="padding: 6px 10px; font-size: 0.8em; background: linear-gradient(135deg, #fa709a 0%, #f5576c 100%);">Eliminar</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 20px; color: #999;">
+                        No hay calificaciones registradas.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+    </div>
+{% endblock content %}

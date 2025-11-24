@@ -1,0 +1,47 @@
+{% extends 'menu.html' %} 
+
+{% block title %}Carga Masiva de Factores Tributarios{% endblock %}
+
+{% block content %}
+    
+    <h2 style="color: #333; font-size: 2rem; margin-bottom: 25px; padding-top: 10px;">
+        Carga Masiva de **Factores** (DJ 1949)
+    </h2>
+    
+    {% include 'components/messages.html' %}
+    
+    <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+        
+        <h6 style="font-weight: 600; color: #333; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            Subir Archivo de Factores
+        </h6>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <p style="color: #666; margin-bottom: 20px;">
+                Por favor, suba el archivo con los 29 factores. El sistema validará la estructura y la suma de los factores 8 al 19 (debe ser ≤ 1).
+            </p>
+            
+            <div style="margin-bottom: 25px;">
+                <label for="factorFile" style="display: block; font-weight: 600; color: #555; margin-bottom: 5px;">
+                    Seleccionar archivo (.csv, .xlsx)
+                </label>
+                <input type="file" style="display: block; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;" 
+                    id="factorFile" name="file" accept=".csv, .xlsx" required>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <a href="#" class="btn btn-read" style="padding: 8px 15px; font-size: 0.9rem; border-radius: 5px;">
+                    Descargar Plantilla de Ejemplo
+                </a>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; margin-top: 30px;">
+                <a href="{% url 'calificaciones:calificacion_list' %}" class="btn btn-read" style="margin-right: 15px;">Cancelar</a>
+
+                <button type="submit" class="btn btn-create">Cargar Factores</button>
+            </div>
+        </form>
+    </div>
+{% endblock content %}
