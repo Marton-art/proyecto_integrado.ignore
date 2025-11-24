@@ -17,8 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from miAppUsuario import views
+from django.contrib.auth.decorators import user_passes_test
+from miAppUsuario.utils import is_admin
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', user_passes_test(is_admin, login_url='/calificaciones/menu/')(admin.site.urls)),
     path('usuarios/', include('miAppUsuario.urls', namespace='usuarios')),
     path('', views.login_view, name='login'), 
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),

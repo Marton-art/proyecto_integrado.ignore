@@ -7,11 +7,10 @@ class CalificacionForm(forms.ModelForm):
     """
     class Meta:
         model = CalificacionTributaria
-        # Excluimos los campos de auditoría (usuario_creador, modificador) 
+        # Se excluyen los campos de auditoría (usuario_creador, modificador) 
         # porque se llenan automáticamente en la vista (views.py)
         exclude = ('usuario_creador', 'usuario_modificador')
         
-        # Widgets para mejor experiencia de usuario (calendario)
         widgets = {
             'fecha_inicio_periodo': forms.DateInput(attrs={'type': 'date'}),
             'fecha_fin_periodo': forms.DateInput(attrs={'type': 'date'}),

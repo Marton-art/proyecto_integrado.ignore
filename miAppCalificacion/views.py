@@ -1,18 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db import IntegrityError, transaction
 from decimal import Decimal
 import pandas as pd 
 import io
 import os
-from datetime import date # Importar date para manejar fechas
-from django.db.models import F # Se recomienda importar F para filtros complejos si se requiriera, pero no es estrictamente necesario aquí.
-
+from datetime import date 
+from django.http import HttpResponseForbidden
+from miAppUsuario.utils import has_access
 from .models import CalificacionTributaria, EmpresaSubsidiaria
 from .forms import CalificacionForm
 
-# --- CONSTANTES GLOBALES ---
 # Factores del 8 al 37 (total 30 factores)
 ALL_FACTORS = [f'Factor {i}' for i in range(8, 38)] 
 
@@ -33,12 +32,11 @@ def calificaciones_home(request):
     """
     Vista principal o dashboard de la aplicación miAppCalificacion.
     """
-    # Usamos 'calificacion/home.html' para evitar colisión de nombres
-    # con cualquier otro 'home.html' de otras apps.
     return render(request, 'menu.html')
 
-# --- VISTA 1: CREAR CALIFICACIÓN (CRUD C) ---
-@login_required(login_url='login')
+@login_required
+@user_passes_test(lambda user: has_access(user, ['Analista', 'Corredor']), 
+                login_url='/forbidden/')
 def create_calificacion(request):
     if request.method == "POST":
         form = CalificacionForm(request.POST)
@@ -58,8 +56,9 @@ def create_calificacion(request):
         
     return render(request, 'create_edit.html', {'form': form})
 
-# --- VISTA 2: LISTAR CALIFICACIONES (CRUD R) ---
-@login_required(login_url='login')
+@login_required
+@user_passes_test(lambda user: has_access(user, ['Analista', 'Gerente', 'Corredor']), 
+                    login_url='/forbidden/') # Redirige a una vista de acceso denegado
 def list_calificaciones(request):
     """Muestra todas las calificaciones, optimizando la consulta a la base de datos."""
     # select_related reduce las consultas al traer la Subsidiaria y el Usuario Creador 
@@ -73,9 +72,9 @@ def list_calificaciones(request):
     }
     return render(request, 'list_calificaciones.html', context)
 
-
-# --- VISTA 3: CARGA MASIVA (FACTOR) ---
-@login_required(login_url='login')
+@login_required
+@user_passes_test(lambda user: has_access(user, ['Analista', 'Corredor']), 
+                login_url='/forbidden/')
 def bulk_upload_factor(request):
     if request.method == 'POST':
         uploaded_file = request.FILES.get('file')
@@ -84,7 +83,7 @@ def bulk_upload_factor(request):
             messages.error(request, 'Debe seleccionar un archivo para cargar.')
             return render(request, 'calificacion/bulk_upload_factor.html')
         
-        # 1. Determinación y Lectura del Archivo
+        # Determinación y Lectura del Archivo
         file_ext = os.path.splitext(uploaded_file.name)[1].lower()
         try:
             if file_ext == '.csv':
@@ -100,13 +99,12 @@ def bulk_upload_factor(request):
             return render(request, 'calificacion/bulk_upload_factor.html')
 
 
-        # --- INICIO LÓGICA DE VALIDACIÓN Y PROCESAMIENTO ---
+        # --- inicio de la logica para la validacion y lo que es procesamiento ---
         num_registros = 0
         try:
             # Homologación de columnas (Uppercase y sin espacios para fácil acceso)
             df.columns = [col.upper().replace(' ', '_') for col in df.columns]
             
-            # 2. **CORRECCIÓN:** Validación de Columnas contra la lista normalizada
             required_cols_normalized = [col.upper().replace(' ', '_') for col in REQUIRED_COLUMNS]
             missing_cols = [col for col in required_cols_normalized if col not in df.columns]
 
@@ -115,7 +113,7 @@ def bulk_upload_factor(request):
                 missing_cols_readable = [col.replace('_', ' ') for col in missing_cols]
                 raise ValueError(f"Faltan las siguientes columnas requeridas: {', '.join(missing_cols_readable)}")
 
-            # 3. Validación de la Regla de Negocio (Suma de Factores 8 al 19 <= 1)
+            # Validación de la Regla de Negocio (Suma de Factores 8 al 19 <= 1)
             # Asegurar que los factores son numéricos y luego calcular la suma
             factors_to_sum_upper = [f.upper().replace(' ', '_') for f in FACTORS_TO_SUM]
             # Usar errors='coerce' reemplaza los valores no numéricos con NaN
@@ -132,16 +130,16 @@ def bulk_upload_factor(request):
                 raise ValueError(error_msg)
 
 
-            # 4. Procesamiento e Inserción/Actualización en Base de Datos (Transacción)
+            # Procesamiento e Inserción/Actualización en Base de Datos (Transacción)
             with transaction.atomic():
                 for index, row in df.iterrows():
                     
                     try:
-                        # 4.1 Búsqueda de la Subsidiaria por ID Fiscal
+                        # Búsqueda de la Subsidiaria por ID Fiscal
                         id_fiscal = str(row['ID_FISCAL_EMPRESA']).strip()
                         subsidiaria_obj = EmpresaSubsidiaria.objects.get(identificacion_fiscal=id_fiscal)
 
-                        # 4.2 Definición de la clave única
+                        # Definición de la clave única
                         unique_key = {
                             'empresa_subsidiaria': subsidiaria_obj, 
                             'ejercicio': int(row['EJERCICIO']),
@@ -151,7 +149,7 @@ def bulk_upload_factor(request):
                             'secuencia': int(row['SECUENCIA']),
                         }
                         
-                        # 4.3 Datos a actualizar/crear
+                        # Datos a actualizar/crear
                         update_data = {
                             'mercado': row['MERCADO'],
                             'tipo_sociedad': row['TIPO_SOCIEDAD'],
@@ -169,7 +167,7 @@ def bulk_upload_factor(request):
                             # Convertir a Decimal, manejar nulos
                             update_data[model_field_name] = Decimal(str(factor_value)) if pd.notna(factor_value) else None
 
-                        # 4.4 Uso de update_or_create con trazabilidad
+                        # Uso de update_or_create con trazabilidad
                         # Buscar si ya existe para preservar el usuario_creador
                         existing_calificacion = CalificacionTributaria.objects.filter(**unique_key).only('usuario_creador').first()
                         
@@ -194,7 +192,7 @@ def bulk_upload_factor(request):
                         raise Exception(f"Fila {index + 2}: Error desconocido en el procesamiento del registro: {e}. El registro no fue creado/actualizado.")
 
 
-            # 5. Mensaje de Éxito
+            # Mensaje de Éxito
             messages.success(request, f'El archivo "{uploaded_file.name}" fue cargado y {num_registros} factores fueron procesados con éxito.')
             
             return redirect('calificaciones:list')
@@ -215,9 +213,9 @@ def bulk_upload_factor(request):
 
     return render(request, 'bulk_upload_factor.html')
 
-# --- VISTA 4: CARGA MASIVA (MONTO) ---
-
-@login_required(login_url='login')
+@login_required
+@user_passes_test(lambda user: has_access(user, ['Analista', 'Corredor']), 
+                login_url='/forbidden/')
 def bulk_upload_monto(request):
     """
     Implementa la Carga Masiva (RF 03) y la lógica de Actualización (HDU 10)
@@ -243,7 +241,6 @@ def bulk_upload_monto(request):
                 # Homologación de columnas
                 df.columns = [col.upper().replace(' ', '_') for col in df.columns]
                 
-                # **CORRECCIÓN:** Validación de Columnas con la constante global
                 required_cols_normalized = [col.upper().replace(' ', '_') for col in REQUIRED_MONTO_COLUMNS]
                 if not all(col in df.columns for col in required_cols_normalized):
                     # Revertir a formato legible para el mensaje de error
@@ -259,7 +256,7 @@ def bulk_upload_monto(request):
                 with transaction.atomic():
                     for index, row in df.iterrows():
                         try:
-                            # 1. Búsqueda de la Subsidiaria por ID Fiscal (Clave de la Lógica)
+                            # Búsqueda de la Subsidiaria por ID Fiscal (Clave de la Lógica)
                             id_fiscal = str(row['ID_FISCAL_EMPRESA']).strip()
                             subsidiaria_obj = EmpresaSubsidiaria.objects.get(identificacion_fiscal=id_fiscal)
                             
@@ -268,13 +265,13 @@ def bulk_upload_monto(request):
                             fecha_fin = pd.to_datetime(row['FECHA_FIN']).date()
                             monto_impuesto = Decimal(str(row['MONTO_IMPUESTO']))
                             
-                            # 2. Llave Única para actualizar o crear
+                            # Llave Única para actualizar o crear
                             key_fields = {
                                 'empresa_subsidiaria': subsidiaria_obj,
                                 'fecha_inicio_periodo': fecha_inicio
                             }
                             
-                            # 3. Datos a insertar/actualizar
+                            # Datos a insertar/actualizar
                             update_defaults = {
                                 'fecha_fin_periodo': fecha_fin,
                                 'monto_impuesto': monto_impuesto,
@@ -283,11 +280,10 @@ def bulk_upload_monto(request):
                                 'usuario_modificador': request.user # Trazabilidad
                             }
                             
-                            # **CORRECCIÓN:** Uso de update_or_create con trazabilidad eficiente
-                            # Paso 1: Buscar si ya existe para preservar el usuario_creador
+                            # Buscar si ya existe para preservar el usuario_creador
                             existing_calificacion = CalificacionTributaria.objects.filter(**key_fields).only('usuario_creador').first()
 
-                            # Paso 2: Crear o Actualizar
+                            # Crear o Actualizar
                             calificacion, created = CalificacionTributaria.objects.update_or_create(
                                 **key_fields,
                                 defaults={
@@ -326,9 +322,11 @@ def bulk_upload_monto(request):
             
     return render(request, 'bulk_upload_monto.html')
 
-# --- VISTA 5: EDITAR CALIFICACIÓN (CRUD U) ---
+# --- edicion de calificacion ---
 
-@login_required(login_url='login')
+@login_required
+@user_passes_test(lambda user: has_access(user, ['Analista', 'Gerente', 'Corredor']), 
+                login_url='/forbidden/')
 def edit_calificacion(request, pk):
     calificacion = get_object_or_404(CalificacionTributaria, pk=pk)
 
@@ -349,9 +347,10 @@ def edit_calificacion(request, pk):
     
     return render(request, 'create_edit.html', {'form': form, 'calificacion': calificacion})
 
-# --- VISTA 6: ELIMINAR CALIFICACIÓN (CRUD D) ---
-
-@login_required(login_url='login')
+# --- eliminacion de calificacion ---
+@login_required
+@user_passes_test(lambda user: has_access(user, []), 
+                login_url='/forbidden/')
 def delete_calificacion(request, pk):
     calificacion = get_object_or_404(CalificacionTributaria, pk=pk)
     
@@ -364,3 +363,6 @@ def delete_calificacion(request, pk):
         return redirect('calificaciones:list')
     
     return render(request, 'delete_confirm.html', {'calificacion': calificacion})
+
+def forbidden_access(request):
+    return HttpResponseForbidden("<h1>Acceso Denegado</h1><p>No tienes los permisos necesarios para acceder a esta sección.</p>")

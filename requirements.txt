@@ -1,4 +1,4 @@
-pip install -r requirements.txt 
+pip install -r requirements.txt
 
 asgiref==3.10.0
 boto3==1.40.69
@@ -6,6 +6,7 @@ botocore==1.40.69
 Django==5.0.6
 django-environ==0.12.0
 django-storages==1.14.6
+django-widget-tweaks==1.5.0
 et_xmlfile==2.0.0
 jmespath==1.0.1
 numpy==2.3.3
