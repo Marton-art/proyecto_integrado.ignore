@@ -49,6 +49,9 @@ class EmpresaSubsidiaria(models.Model):
         verbose_name = "Empresa Subsidiaria"
         verbose_name_plural = "Empresas subsidiarias"
 
+    def __str__(self):
+        return self.nombre_legal
+
 class Pais(models.Model):
     nombre = models.CharField(
         max_length = 50,

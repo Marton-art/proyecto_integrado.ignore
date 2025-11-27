@@ -19,4 +19,8 @@ urlpatterns = [
 
     # url para la vista de acceso denegado
     path('forbidden/', views.forbidden_access, name='forbidden'),
+
+    # Para la descarga de plantillas tanto para los factores como montos
+    path('descargar-plantilla/montos/', views.descargar_plantilla_montos_view, name='descargar_plantilla_montos'),
+    path('plantilla/factores/', views.descargar_plantilla_factores_view, name='descargar_plantilla_factores'),
 ]
